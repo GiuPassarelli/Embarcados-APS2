@@ -6,6 +6,15 @@
 #include <stdio.h>
 #include "maquina1.h"
 
+typedef struct {
+	const uint8_t *data;
+	uint16_t width;
+	uint16_t height;
+	uint8_t dataSize;
+} tImage;
+
+#include "h_icons/centrifuge.h"
+
 /**
  * Inicializa ordem do menu
  * retorna o primeiro ciclo que
@@ -31,6 +40,17 @@ t_ciclo *initMenuOrder(){
 }
 
 void main(void){
-  t_ciclo *p_primeiro = initMenuOrder();
-  printf("%s", p_primeiro->next->next->nome);
+  //t_ciclo *p_primeiro = initMenuOrder();
+  //printf("%s", p_primeiro->next->next->nome);
+  
+  //ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+  //sprintf(stingLCD, "Computacao Embarcada %d", 2018);
+  //ili9488_draw_string(0, 50, stingLCD);
+  
+  // desenha imagem lavagem na posicao X=80 e Y=150
+  ili9488_draw_pixmap(80, 150, image_data_centrifuge.width, image_data_centrifuge.height, image_data_centrifuge.data);
+  
+  while(1){
+	  
+  }
 }
