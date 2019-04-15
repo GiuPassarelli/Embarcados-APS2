@@ -1386,6 +1386,12 @@
     <Compile Include="src\icons\heavy.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\icons\left_arrow.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\icons\right_arrow.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\icons\rinse.h">
       <SubType>compile</SubType>
     </Compile>

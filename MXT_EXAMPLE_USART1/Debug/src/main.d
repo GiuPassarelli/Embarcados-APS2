@@ -183,8 +183,11 @@ src/main.d src/main.o: ../src/main.c ../src/asf.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\string.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\xlocale.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\string.h \
- ../src/icons/fast.h ../src/icons/daily.h ../src/icons/heavy.h \
- ../src/icons/rinse.h ../src/icons/centrifuge.h ../src/icons/custom.h
+ ../src/config/conf_board.h ../src/config/conf_example.h \
+ ../src/maquina1.h ../src/icons/fast.h ../src/icons/daily.h \
+ ../src/icons/heavy.h ../src/icons/rinse.h ../src/icons/centrifuge.h \
+ ../src/icons/custom.h ../src/icons/right_arrow.h \
+ ../src/icons/left_arrow.h
 
 ../src/asf.h:
 
@@ -572,6 +575,12 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\sys\string.h:
 
+../src/config/conf_board.h:
+
+../src/config/conf_example.h:
+
+../src/maquina1.h:
+
 ../src/icons/fast.h:
 
 ../src/icons/daily.h:
@@ -583,3 +592,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 ../src/icons/centrifuge.h:
 
 ../src/icons/custom.h:
+
+../src/icons/right_arrow.h:
+
+../src/icons/left_arrow.h:
