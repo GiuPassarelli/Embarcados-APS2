@@ -232,36 +232,44 @@ static void select_screen(){
 		selected_mode = p_primeiro->previous;
 	}
 	
+	if(page_number == 5){
+		ili9488_draw_pixmap(115, 60, custom.width, custom.height, custom.data);
+		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+		ili9488_draw_string(100, 170, "Customizado");
+	}
+	
 	ili9488_draw_pixmap(250, 60, right_arrow.width, right_arrow.height, right_arrow.data);
 	ili9488_draw_pixmap(5, 60, left_arrow.width, left_arrow.height, left_arrow.data);
 	
-	sprintf(cicle_name, selected_mode->nome);
-	sprintf(enx_tempo, "Tempo de enxague: %d", selected_mode->enxagueTempo);
-	sprintf(enx_qnt, "Quantidade: %d", selected_mode->enxagueQnt);
-	sprintf(rpm, "RPM: %d", selected_mode->centrifugacaoRPM);
-	sprintf(cent_tempo, "Tempo de centrifugacao: %d", selected_mode->centrifugacaoTempo);
-	
-	if(selected_mode->heavy == 0){
-		sprintf(heavy_on, "Modo pesado: desativado");
+	if(page_number != 5){
+		sprintf(cicle_name, selected_mode->nome);
+		sprintf(enx_tempo, "Tempo de enxague: %d", selected_mode->enxagueTempo);
+		sprintf(enx_qnt, "Quantidade: %d", selected_mode->enxagueQnt);
+		sprintf(rpm, "RPM: %d", selected_mode->centrifugacaoRPM);
+		sprintf(cent_tempo, "Tempo de centrifugacao: %d", selected_mode->centrifugacaoTempo);
+		
+		if(selected_mode->heavy == 0){
+			sprintf(heavy_on, "Modo pesado: desativado");
+		}
+		if(selected_mode->heavy == 1){
+			sprintf(heavy_on, "Modo pesado: ativado");
+		}
+		if(selected_mode->bubblesOn == 0){
+			sprintf(bubbles, "Modo bolhas: desativado");
+		}
+		if(selected_mode->bubblesOn == 1){
+			sprintf(bubbles, "Modo bolhas: ativado");
+		}
+		
+		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+		ili9488_draw_string(120, 170, cicle_name);
+		ili9488_draw_string(2, 200, enx_tempo);
+		ili9488_draw_string(2, 230, enx_qnt);
+		ili9488_draw_string(2, 260, rpm);
+		ili9488_draw_string(2, 290, cent_tempo);
+		ili9488_draw_string(2, 320, heavy_on);
+		ili9488_draw_string(2, 350, bubbles);
 	}
-	if(selected_mode->heavy == 1){
-		sprintf(heavy_on, "Modo pesado: ativado");
-	}
-	if(selected_mode->bubblesOn == 0){
-		sprintf(bubbles, "Modo bolhas: desativado");
-	}
-	if(selected_mode->bubblesOn == 1){
-		sprintf(bubbles, "Modo bolhas: ativado");
-	}
-	
-	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-	ili9488_draw_string(125, 170, cicle_name);
-	ili9488_draw_string(2, 200, enx_tempo);
-	ili9488_draw_string(2, 230, enx_qnt);
-	ili9488_draw_string(2, 260, rpm);
-	ili9488_draw_string(2, 290, cent_tempo);
-	ili9488_draw_string(2, 320, heavy_on);
-	ili9488_draw_string(2, 350, bubbles);
 }
 
 uint32_t convert_axis_system_x(uint32_t touch_y) {
@@ -276,28 +284,19 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 	return ILI9488_LCD_HEIGHT*touch_x/4096;
 }
 
-static void fix_pg(){
-	//if (page_number = 5) {
-	//	page_number = 0;
-	//}
-	//if (page_number = -1) {
-	//	page_number = 4;
-	//}
-}
-
 void update_screen(uint32_t tx, uint32_t ty) {
 	if(ty >= 60 && ty <= 120) {
 		if(tx >= 5 && tx <= 65) {
 			page_number -= 1;
 			if (page_number < 0) {
-				page_number += 5;
+				page_number += 6;
 			}
 			select_screen();
 		} 
 		else if(tx >= 250 && tx <= 310) {
 			page_number += 1;
-			if (page_number >= 5) {
-				page_number -= 5;
+			if (page_number >= 6) {
+				page_number -= 6;
 			}
 			select_screen();
 		}
