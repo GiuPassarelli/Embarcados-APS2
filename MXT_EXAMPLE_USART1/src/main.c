@@ -12,6 +12,7 @@
 * custom.png: custom by BomSymbols from the Noun Project
 * right_arrow.png: Right by Rose Alice Design from the Noun Project
 * left_arrow.png: Left by Rose Alice Design from the Noun Project
+* run.png: icon made by Freepik from Flaticon.com
 */
 
 #include <asf.h>
@@ -48,6 +49,7 @@ typedef struct {
 #include "icons/custom.h"
 #include "icons/right_arrow.h"
 #include "icons/left_arrow.h"
+#include "icons/run.h"
 
 /**
  * Inicializa ordem do menu
@@ -240,6 +242,7 @@ static void select_screen(){
 	
 	ili9488_draw_pixmap(250, 60, right_arrow.width, right_arrow.height, right_arrow.data);
 	ili9488_draw_pixmap(5, 60, left_arrow.width, left_arrow.height, left_arrow.data);
+	ili9488_draw_pixmap(130, 380, run.width, run.height, run.data);
 	
 	if(page_number != 5){
 		sprintf(cicle_name, selected_mode->nome);
