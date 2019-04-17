@@ -31,6 +31,9 @@
 #define USART_TX_MAX_LENGTH     0xff
 
 volatile int page_number = 0;
+volatile int customize_open = 0;
+volatile int value_selected = 0;
+volatile int selection_addition = 0;
 
 struct ili9488_opt_t g_ili9488_display_opt;
 
@@ -50,6 +53,10 @@ typedef struct {
 #include "icons/right_arrow.h"
 #include "icons/left_arrow.h"
 #include "icons/run.h"
+#include "icons/arrow-down.h"
+#include "icons/arrow-up.h"
+#include "icons/back-arrow.h"
+#include "icons/circle-outline.h"
 
 /**
  * Inicializa ordem do menu
@@ -58,9 +65,9 @@ typedef struct {
  */
 t_ciclo *initMenuOrder(){
   c_rapido.previous = &c_centrifuga;
-  c_rapido.next = &c_diario;
+  c_rapido.next = &c_custom;
 
-  c_diario.previous = &c_rapido;
+  c_diario.previous = &c_custom;
   c_diario.next = &c_pesado;
 
   c_pesado.previous = &c_diario;
@@ -71,6 +78,9 @@ t_ciclo *initMenuOrder(){
 
   c_centrifuga.previous = &c_enxague;
   c_centrifuga.next = &c_rapido;
+  
+  c_custom.previous = &c_rapido;
+  c_custom.next = &c_diario;
 
   return(&c_diario);
 }
@@ -85,8 +95,8 @@ static void configure_lcd(void){
 	/* Initialize LCD */
 	ili9488_init(&g_ili9488_display_opt);	
 	
-	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
-	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
+	//ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+	//ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
 }
 
 /**
@@ -182,26 +192,8 @@ static void mxt_init(struct mxt_device *device)
 			+ MXT_GEN_COMMANDPROCESSOR_CALIBRATE, 0x01);
 }
 
-//static void main_screen(void){
-//	uint8_t stingLCD[256];
-//	
-//	ili9488_draw_pixmap(45, 55, fast.width, fast.height, fast.data);
-//	ili9488_draw_pixmap(185, 55, daily.width, daily.height, daily.data);
-//	ili9488_draw_pixmap(45, 195, heavy.width, heavy.height, heavy.data);
-//	ili9488_draw_pixmap(185, 195, rinse.width, rinse.height, rinse.data);
-//	ili9488_draw_pixmap(45, 335, centrifuge.width, centrifuge.height, centrifuge.data);
-//	ili9488_draw_pixmap(185, 335, custom.width, custom.height, custom.data);
-//	
-	//ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-//	
-	//sprintf(stingLCD, "Computacao Embarcada %d", 2019);
-	//ili9488_draw_string(10, 300, stingLCD);
-//}
 
-static void select_screen(){
-	t_ciclo *p_primeiro = initMenuOrder();
-	t_ciclo *selected_mode;
-	
+static void draw_struct(t_ciclo *selected_mode, int added_value_x, int added_value_y){
 	uint8_t cicle_name[256];
 	uint8_t enx_tempo[256];
 	uint8_t enx_qnt[256];
@@ -209,6 +201,39 @@ static void select_screen(){
 	uint8_t cent_tempo[256];
 	uint8_t heavy_on[256];
 	uint8_t bubbles[256];
+	
+	sprintf(cicle_name, selected_mode->nome);
+	sprintf(enx_tempo, "Tempo de enxague: %d", selected_mode->enxagueTempo);
+	sprintf(enx_qnt, "Quantidade: %d", selected_mode->enxagueQnt);
+	sprintf(rpm, "RPM: %d", selected_mode->centrifugacaoRPM);
+	sprintf(cent_tempo, "Tempo de centrifug: %d", selected_mode->centrifugacaoTempo);
+	
+	if(selected_mode->heavy == 0){
+		sprintf(heavy_on, "Modo pesado: off");
+	}
+	if(selected_mode->heavy == 1){
+		sprintf(heavy_on, "Modo pesado: on");
+	}
+	if(selected_mode->bubblesOn == 0){
+		sprintf(bubbles, "Modo bolhas: off");
+	}
+	if(selected_mode->bubblesOn == 1){
+		sprintf(bubbles, "Modo bolhas: on");
+	}
+	
+	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+	ili9488_draw_string(100 + added_value_x, 10 + added_value_y, cicle_name);
+	ili9488_draw_string(2, 40 + added_value_y, enx_tempo);
+	ili9488_draw_string(2, 70 + added_value_y, enx_qnt);
+	ili9488_draw_string(2, 100 + added_value_y, rpm);
+	ili9488_draw_string(2, 130 + added_value_y, cent_tempo);
+	ili9488_draw_string(2, 160 + added_value_y, heavy_on);
+	ili9488_draw_string(2, 190 + added_value_y, bubbles);
+}
+
+static void select_screen(){
+	t_ciclo *p_primeiro = initMenuOrder();
+	t_ciclo *selected_mode;
 	
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
 	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
@@ -227,52 +252,127 @@ static void select_screen(){
 	}
 	if(page_number == 3){
 		ili9488_draw_pixmap(115, 60, centrifuge.width, centrifuge.height, centrifuge.data);
-		selected_mode = p_primeiro->previous->previous;
+		selected_mode = p_primeiro->next->next->next;
 	}
 	if(page_number == 4){
 		ili9488_draw_pixmap(115, 60, fast.width, fast.height, fast.data);
-		selected_mode = p_primeiro->previous;
+		selected_mode = p_primeiro->previous->previous;
 	}
-	
+
 	if(page_number == 5){
 		ili9488_draw_pixmap(115, 60, custom.width, custom.height, custom.data);
 		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 		ili9488_draw_string(100, 170, "Customizado");
 	}
-	
+
 	ili9488_draw_pixmap(250, 60, right_arrow.width, right_arrow.height, right_arrow.data);
 	ili9488_draw_pixmap(5, 60, left_arrow.width, left_arrow.height, left_arrow.data);
 	ili9488_draw_pixmap(130, 380, run.width, run.height, run.data);
 	
 	if(page_number != 5){
-		sprintf(cicle_name, selected_mode->nome);
-		sprintf(enx_tempo, "Tempo de enxague: %d", selected_mode->enxagueTempo);
-		sprintf(enx_qnt, "Quantidade: %d", selected_mode->enxagueQnt);
-		sprintf(rpm, "RPM: %d", selected_mode->centrifugacaoRPM);
-		sprintf(cent_tempo, "Tempo de centrifugacao: %d", selected_mode->centrifugacaoTempo);
-		
-		if(selected_mode->heavy == 0){
-			sprintf(heavy_on, "Modo pesado: desativado");
-		}
-		if(selected_mode->heavy == 1){
-			sprintf(heavy_on, "Modo pesado: ativado");
-		}
-		if(selected_mode->bubblesOn == 0){
-			sprintf(bubbles, "Modo bolhas: desativado");
-		}
-		if(selected_mode->bubblesOn == 1){
-			sprintf(bubbles, "Modo bolhas: ativado");
-		}
-		
-		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-		ili9488_draw_string(120, 170, cicle_name);
-		ili9488_draw_string(2, 200, enx_tempo);
-		ili9488_draw_string(2, 230, enx_qnt);
-		ili9488_draw_string(2, 260, rpm);
-		ili9488_draw_string(2, 290, cent_tempo);
-		ili9488_draw_string(2, 320, heavy_on);
-		ili9488_draw_string(2, 350, bubbles);
+		draw_struct(selected_mode, 20, 160);
 	}
+}
+
+static void open_customization(){
+	customize_open = 1;
+	t_ciclo *p_primeiro = initMenuOrder();
+	t_ciclo *selected_mode = p_primeiro->previous;
+	
+	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
+
+	draw_struct(selected_mode, 0, 20);
+	
+	ili9488_draw_pixmap(90, 240, arrowup.width, arrowup.height, arrowup.data);
+	ili9488_draw_pixmap(90, 300, arrowdown.width, arrowdown.height, arrowdown.data);
+	ili9488_draw_pixmap(170, 270, circleoutline.width, circleoutline.height, circleoutline.data);
+	ili9488_draw_pixmap(280, 50, backarrow.width, backarrow.height, backarrow.data);
+	ili9488_draw_pixmap(130, 380, run.width, run.height, run.data);
+}
+
+static void run_module(){
+	
+}
+
+static void change_value(int signal){
+	t_ciclo *p_primeiro = initMenuOrder();
+	t_ciclo *selected_mode = p_primeiro->previous;
+	uint8_t new_value[256];
+	int x_value;
+	int y_value;
+	int case_value = 0;
+	
+	switch (selection_addition){
+		case 0:
+			selected_mode->enxagueTempo += (signal * 1);
+			if(selected_mode->enxagueTempo < 0){
+				selected_mode->enxagueTempo = 0;
+			}
+			case_value = selected_mode->enxagueTempo;
+			x_value = 215;
+			y_value = 60;
+			break;
+		case 30:
+			selected_mode->enxagueQnt += (signal * 1);
+			if(selected_mode->enxagueQnt < 0){
+				selected_mode->enxagueQnt = 0;
+			}
+			case_value = selected_mode->enxagueQnt;
+			x_value = 145;
+			y_value = 90;
+			break;
+		case 60:
+			selected_mode->centrifugacaoRPM += (signal * 100);
+			if(selected_mode->centrifugacaoRPM < 0){
+				selected_mode->centrifugacaoRPM = 0;
+			}
+			case_value = selected_mode->centrifugacaoRPM;
+			x_value = 60;
+			y_value = 120;
+			break;
+		case 90:
+			selected_mode->centrifugacaoTempo += (signal * 1);
+			if(selected_mode->centrifugacaoTempo < 0){
+				selected_mode->centrifugacaoTempo = 0;
+			}
+			case_value = selected_mode->centrifugacaoTempo;
+			x_value = 240;
+			y_value = 150;
+			break;
+		case 120:
+			selected_mode->heavy = !selected_mode->heavy;
+			case_value = selected_mode->heavy;
+			x_value = 155;
+			y_value = 180;
+			break;
+		case 150:
+			selected_mode->bubblesOn = !selected_mode->bubblesOn;
+			case_value = selected_mode->bubblesOn;
+			x_value = 155;
+			y_value = 210;
+			break;
+		default:
+			break;
+	}
+	
+	if(selection_addition == 120 || selection_addition == 150){
+		if(case_value == 0){
+			sprintf(new_value, "off");
+		}
+		if(case_value == 1){
+			sprintf(new_value, "on");
+		}
+	}
+	else{
+		sprintf(new_value, "%d", case_value);
+	}
+	
+	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+	ili9488_draw_filled_rectangle(x_value, y_value, x_value + 40, y_value + 15);
+	
+	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+	ili9488_draw_string(x_value, y_value, new_value);
 }
 
 uint32_t convert_axis_system_x(uint32_t touch_y) {
@@ -288,7 +388,7 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 }
 
 void update_screen(uint32_t tx, uint32_t ty) {
-	if(ty >= 60 && ty <= 120) {
+	if(ty >= 60 && ty <= 120 && !customize_open) {
 		if(tx >= 5 && tx <= 65) {
 			page_number -= 1;
 			if (page_number < 0) {
@@ -302,6 +402,40 @@ void update_screen(uint32_t tx, uint32_t ty) {
 				page_number -= 6;
 			}
 			select_screen();
+		}
+	}
+	if(ty >= 380 && ty <= 450 && tx >= 130 && tx <= 200){
+		if(page_number == 5  && !customize_open){
+			open_customization();
+		}
+		else{
+			run_module();
+		}
+	}
+	if(customize_open){
+		if(tx >= 90 && tx <= 150 && !value_selected){
+			ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+			if(ty >= 240 && ty <= 300 && selection_addition > 0){          //UP-ARROW
+				ili9488_draw_filled_rectangle(280, 50 + selection_addition, 310, 80 + selection_addition);
+				selection_addition -= 30;
+				ili9488_draw_pixmap(280, 50 + selection_addition, backarrow.width, backarrow.height, backarrow.data);
+			}
+			if(ty >= 300 && ty <= 360 && selection_addition < 150){          //DOWN-ARROW
+				ili9488_draw_filled_rectangle(280, 50 + selection_addition, 310, 80 + selection_addition);
+				selection_addition += 30;
+				ili9488_draw_pixmap(280, 50 + selection_addition, backarrow.width, backarrow.height, backarrow.data);
+			}
+		}
+		if(tx >= 90 && tx <= 150 && value_selected){
+			if(ty >= 240 && ty <= 300){           //UP-ARROW
+				change_value(1);
+			}
+			if(ty >= 300 && ty <= 360){          //DOWN-ARROW
+				change_value(-1);
+			}
+		}
+		if(tx >= 170 && tx <= 230 && ty >= 270 && ty <= 330){     //SELECT
+			value_selected = !value_selected;
 		}
 	}
 }

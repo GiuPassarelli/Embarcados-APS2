@@ -60,6 +60,15 @@ t_ciclo c_centrifuga = {.nome = "Centrifuga",
                      .bubblesOn = 0,
 };
 
+t_ciclo c_custom = {.nome = "Customizado",
+					.enxagueTempo = 0,
+					.enxagueQnt = 0,
+					.centrifugacaoRPM = 0,
+					.centrifugacaoTempo = 0,
+					.heavy = 0,
+					.bubblesOn = 0,
+};
+
 
 t_ciclo *initMenuOrder();
 

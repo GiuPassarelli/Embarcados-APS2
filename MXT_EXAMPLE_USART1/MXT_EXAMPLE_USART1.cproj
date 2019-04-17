@@ -1371,7 +1371,19 @@
     <None Include="src\config\conf_ili9488.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\icons\arrow-down.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\icons\arrow-up.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\icons\back-arrow.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\icons\centrifuge.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\icons\circle-outline.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\icons\custom.h">
