@@ -28,12 +28,28 @@
 #define MAX_ENTRIES        3
 #define STRING_LENGTH     70
 
+#define HOUR        0
+#define MINUTE      0
+#define SECOND      0
+
 #define USART_TX_MAX_LENGTH     0xff
+
+// Botão que representará porta
+// Botão
+#define BUT_PIO      PIOA
+#define BUT_PIO_ID   ID_PIOA
+#define BUT_IDX  11
+#define BUT_IDX_MASK (1 << BUT_IDX)
 
 volatile int page_number = 0;
 volatile int customize_open = 0;
+volatile int lock_screen = 0;
+volatile int security_block = 0;
 volatile int value_selected = 0;
 volatile int selection_addition = 0;
+volatile int running = 0;
+
+void RTC_init(void);
 
 struct ili9488_opt_t g_ili9488_display_opt;
 
@@ -57,6 +73,8 @@ typedef struct {
 #include "icons/arrow-up.h"
 #include "icons/back-arrow.h"
 #include "icons/circle-outline.h"
+#include "icons/stop.h"
+#include "icons/end.h"
 
 /**
  * Inicializa ordem do menu
@@ -84,6 +102,7 @@ t_ciclo *initMenuOrder(){
 
   return(&c_diario);
 }
+
 
 static void configure_lcd(void){
 	/* Initialize display parameter */
@@ -193,6 +212,27 @@ static void mxt_init(struct mxt_device *device)
 }
 
 
+void RTC_init(){
+	/* Configura o PMC */
+	pmc_enable_periph_clk(ID_RTC);
+
+	/* Default RTC configuration, 24-hour mode */
+	rtc_set_hour_mode(RTC, 0);
+
+	/* Configura data e hora manualmente */
+	rtc_set_time(RTC, HOUR, MINUTE, SECOND);
+
+	/* Configure RTC interrupts */
+	NVIC_DisableIRQ(RTC_IRQn);
+	NVIC_ClearPendingIRQ(RTC_IRQn);
+	NVIC_SetPriority(RTC_IRQn, 0);
+	NVIC_EnableIRQ(RTC_IRQn);
+
+	/* Ativa interrupcao via alarme */
+	rtc_enable_interrupt(RTC,  RTC_IER_ALREN);
+
+}
+
 static void draw_struct(t_ciclo *selected_mode, int added_value_x, int added_value_y){
 	uint8_t cicle_name[256];
 	uint8_t enx_tempo[256];
@@ -292,6 +332,40 @@ static void open_customization(){
 }
 
 static void run_module(){
+	if(security_block == 1){
+		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+		ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
+		ili9488_draw_pixmap(110, 140, stop.width, stop.height, stop.data);
+		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+		ili9488_draw_string(75, 260, "Porta aberta!");
+		delay_s(5);
+		if(customize_open == 1){
+			open_customization();
+		}
+		else{
+			select_screen();
+		}
+		
+	}
+	else if(security_block == 0){
+		
+		uint32_t minute;
+		uint32_t second;
+		uint32_t hour;
+		
+		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+		ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
+		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+		ili9488_draw_string(50, 240, "Lavagem em progresso");
+		ili9488_draw_pixmap(230, 60, end.width, end.height, end.data);
+		
+		hour = 0;
+		minute = 0;
+		second = 0;
+		rtc_set_time(RTC, hour, minute, second);
+		
+		running = 1;
+	}
 	
 }
 
@@ -401,6 +475,7 @@ void update_screen(uint32_t tx, uint32_t ty) {
 			if (page_number >= 6) {
 				page_number -= 6;
 			}
+			running = 0;
 			select_screen();
 		}
 	}
@@ -410,6 +485,7 @@ void update_screen(uint32_t tx, uint32_t ty) {
 		}
 		else{
 			run_module();
+			customize_open = 0;
 		}
 	}
 	if(customize_open){
@@ -522,6 +598,37 @@ void mxt_debounce(struct mxt_device *device)
 
 }
 
+void check_door(void){
+	security_block = !security_block;
+}
+
+void io_init(void)
+{
+	// Inicializa clock do periférico PIO responsavel pelo botao
+	pmc_enable_periph_clk(BUT_PIO_ID);
+
+	// Configura PIO para lidar com o pino do botão como entrada
+	// com pull-up
+	pio_configure(BUT_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE );
+
+	// Configura interrupção no pino referente ao botao e associa
+	// função de callback caso uma interrupção for gerada
+	// a função de callback é a: but_callback()
+	pio_handler_set(BUT_PIO,
+	BUT_PIO_ID,
+	BUT_IDX_MASK,
+	PIO_IT_RISE_EDGE,
+	check_door);
+
+	// Ativa interrupção
+	pio_enable_interrupt(BUT_PIO, BUT_IDX_MASK);
+
+	// Configura NVIC para receber interrupcoes do PIO do botao
+	// com prioridade 4 (quanto mais próximo de 0 maior)
+	NVIC_EnableIRQ(BUT_PIO_ID);
+	NVIC_SetPriority(BUT_PIO_ID, 4); // Prioridade 4
+}
+
 
 /**
  * \brief Main application function.
@@ -546,10 +653,11 @@ int main(void)
 	sysclk_init();
 	board_init();
 	ioport_init();
+	RTC_init();
 
     /* Inicializa e configura o LCD */
 	configure_lcd();
-	select_screen();
+	
 	
 	/* Initialize the mXT touch device */
 	mxt_init(&device);
@@ -557,8 +665,23 @@ int main(void)
 	/* Initialize stdio on USART */
 	stdio_serial_init(USART_SERIAL_EXAMPLE, &usart_serial_options);
 	
+	io_init();
+	
+	t_ciclo *p_primeiro = initMenuOrder();
+	t_ciclo *selected_mode;
+	
+	uint32_t minute;
+	uint32_t second;
+	uint32_t hour;
+	
+	char bufferHour[32];
+	char bufferMinute[32];
+	char bufferSecond[32];
+	
+	int lastSecond = 0;
+	
 	printf("\n\rmaXTouch data USART transmitter\n\r");
-
+	security_block = 0;
 	while (1) {
 		/* Check for any pending messages and run message handler if any
 		 * message is found in the queue */
@@ -567,6 +690,59 @@ int main(void)
 			delay_ms(800);
 			mxt_debounce(&device);
 		}
+		if(running){
+			if(page_number == 0){
+				selected_mode = p_primeiro;
+			}
+			if(page_number == 1){
+				selected_mode = p_primeiro->next;
+			}
+			if(page_number == 2){
+				selected_mode = p_primeiro->next->next;
+			}
+			if(page_number == 3){
+				selected_mode = p_primeiro->next->next->next;
+			}
+			if(page_number == 4){
+				selected_mode = p_primeiro->previous->previous;
+			}
+			if(page_number == 5){
+				selected_mode = p_primeiro->previous;
+			}
+			
+			rtc_get_time(RTC, &hour, &minute, &second);
+			
+			int minutesToFinish = (selected_mode->enxagueTempo * selected_mode->enxagueQnt) + selected_mode->centrifugacaoTempo;
+			
+			if(minute != minutesToFinish){
+				sprintf(bufferMinute, "%d", minute);
+				sprintf(bufferSecond, "%d", second);
+				
+				if(lastSecond != second){
+					ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+					ili9488_draw_filled_rectangle(100, 300, 300, 350);
+					ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+					
+					ili9488_draw_string(100, 300, bufferMinute);
+					ili9488_draw_string(125, 300, ":");
+					ili9488_draw_string(150, 300, bufferSecond);
+					lastSecond = second;
+				}
+				
+				rtc_get_time(RTC, &hour, &minute, &second);
+			}
+			else{
+				ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
+				ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
+				ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+				ili9488_draw_string(50, 240, "Lavagem concluida!");
+				running = 0;
+				delay_s(2);
+				select_screen();
+				lastSecond = 0;
+			}
+		}
+		
 	}
 	return 0;
 }
