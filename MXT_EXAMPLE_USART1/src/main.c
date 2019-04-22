@@ -48,6 +48,7 @@ volatile int security_block = 0;
 volatile int value_selected = 0;
 volatile int selection_addition = 0;
 volatile int running = 0;
+volatile int freeze_mode = 0;
 
 void RTC_init(void);
 
@@ -75,6 +76,7 @@ typedef struct {
 #include "icons/circle-outline.h"
 #include "icons/stop.h"
 #include "icons/end.h"
+#include "icons/freeze.h"
 
 /**
  * Inicializa ordem do menu
@@ -358,6 +360,7 @@ static void run_module(){
 		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 		ili9488_draw_string(50, 240, "Lavagem em progresso");
 		ili9488_draw_pixmap(230, 60, end.width, end.height, end.data);
+		ili9488_draw_pixmap(5, 60, freeze.width, freeze.height, freeze.data);
 		
 		hour = 0;
 		minute = 0;
@@ -464,13 +467,19 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 void update_screen(uint32_t tx, uint32_t ty) {
 	if(ty >= 60 && ty <= 120 && !customize_open) {
 		if(tx >= 5 && tx <= 65) {
-			page_number -= 1;
-			if (page_number < 0) {
-				page_number += 6;
+			if (!running){
+				page_number -= 1;
+				if (page_number < 0) {
+					page_number += 6;
+				}
+				select_screen();
 			}
-			select_screen();
+			if (running){
+				freeze_mode = 1;
+			}
+			
 		} 
-		else if(tx >= 250 && tx <= 310) {
+		else if(tx >= 250 && tx <= 310 && !freeze_mode) {
 			page_number += 1;
 			if (page_number >= 6) {
 				page_number -= 6;
@@ -737,6 +746,7 @@ int main(void)
 				ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 				ili9488_draw_string(50, 240, "Lavagem concluida!");
 				running = 0;
+				freeze_mode = 0;
 				delay_s(2);
 				select_screen();
 				lastSecond = 0;
