@@ -76,7 +76,7 @@ typedef struct {
 #include "icons/circle-outline.h"
 #include "icons/stop.h"
 #include "icons/end.h"
-#include "icons/freeze.h"
+#include "icons/snowflake.h"
 
 /**
  * Inicializa ordem do menu
@@ -360,7 +360,7 @@ static void run_module(){
 		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 		ili9488_draw_string(50, 240, "Lavagem em progresso");
 		ili9488_draw_pixmap(230, 60, end.width, end.height, end.data);
-		ili9488_draw_pixmap(5, 60, freeze.width, freeze.height, freeze.data);
+		ili9488_draw_pixmap(5, 60, snowflake.width, snowflake.height, snowflake.data);
 		
 		hour = 0;
 		minute = 0;
@@ -494,7 +494,6 @@ void update_screen(uint32_t tx, uint32_t ty) {
 		}
 		else{
 			run_module();
-			customize_open = 0;
 		}
 	}
 	if(customize_open){

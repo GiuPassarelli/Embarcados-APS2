@@ -187,7 +187,7 @@ src/main.d src/main.o: ../src/main.c ../src/asf.h \
  ../src/icons/left_arrow.h ../src/icons/run.h ../src/icons/arrow-down.h \
  ../src/icons/arrow-up.h ../src/icons/back-arrow.h \
  ../src/icons/circle-outline.h ../src/icons/stop.h ../src/icons/end.h \
- ../src/icons/freeze.h
+ ../src/icons/snowflake.h
 
 ../src/asf.h:
 
@@ -607,4 +607,4 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-no
 
 ../src/icons/end.h:
 
-../src/icons/freeze.h:
+../src/icons/snowflake.h:
