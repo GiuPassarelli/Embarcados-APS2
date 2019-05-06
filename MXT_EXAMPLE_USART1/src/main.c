@@ -675,7 +675,6 @@ int main(void)
 	
 	io_init();
 	
-	t_ciclo *p_primeiro = initMenuOrder();
 	t_ciclo *selected_mode;
 	
 	uint32_t minute;
@@ -697,23 +696,9 @@ int main(void)
 			mxt_debounce(&device);
 		}
 		if(running){
-			if(page_number == 0){
-				selected_mode = p_primeiro;
-			}
-			if(page_number == 1){
-				selected_mode = p_primeiro->next;
-			}
-			if(page_number == 2){
-				selected_mode = p_primeiro->next->next;
-			}
-			if(page_number == 3){
-				selected_mode = p_primeiro->next->next->next;
-			}
-			if(page_number == 4){
-				selected_mode = p_primeiro->previous->previous;
-			}
-			if(page_number == 5){
-				selected_mode = p_primeiro->previous;
+			selected_mode = &c_diario;
+			for(int i = 0; i < page_number; i++) {
+				selected_mode = selected_mode->next;
 			}
 			
 			rtc_get_time(RTC, &hour, &minute, &second);
