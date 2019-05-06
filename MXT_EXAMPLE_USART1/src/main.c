@@ -115,9 +115,6 @@ static void configure_lcd(void){
 
 	/* Initialize LCD */
 	ili9488_init(&g_ili9488_display_opt);	
-	
-	//ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
-	//ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
 }
 
 /**
