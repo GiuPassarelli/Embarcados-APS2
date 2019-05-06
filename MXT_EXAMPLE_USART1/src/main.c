@@ -236,41 +236,40 @@ void RTC_init(){
 }
 
 static void draw_struct(t_ciclo *selected_mode, int added_value_x, int added_value_y){
-	uint8_t cicle_name[256];
-	uint8_t enx_tempo[256];
-	uint8_t enx_qnt[256];
-	uint8_t rpm[256];
-	uint8_t cent_tempo[256];
-	uint8_t heavy_on[256];
-	uint8_t bubbles[256];
-	
-	sprintf(cicle_name, selected_mode->nome);
-	sprintf(enx_tempo, "Tempo de enxague: %d", selected_mode->enxagueTempo);
-	sprintf(enx_qnt, "Quantidade: %d", selected_mode->enxagueQnt);
-	sprintf(rpm, "RPM: %d", selected_mode->centrifugacaoRPM);
-	sprintf(cent_tempo, "Tempo de centrifug: %d", selected_mode->centrifugacaoTempo);
-	
-	if(selected_mode->heavy == 0){
-		sprintf(heavy_on, "Modo pesado: off");
-	}
-	if(selected_mode->heavy == 1){
-		sprintf(heavy_on, "Modo pesado: on");
-	}
-	if(selected_mode->bubblesOn == 0){
-		sprintf(bubbles, "Modo bolhas: off");
-	}
-	if(selected_mode->bubblesOn == 1){
-		sprintf(bubbles, "Modo bolhas: on");
-	}
+	uint8_t buffer[128];
 	
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-	ili9488_draw_string(100 + added_value_x, 10 + added_value_y, cicle_name);
-	ili9488_draw_string(2, 40 + added_value_y, enx_tempo);
-	ili9488_draw_string(2, 70 + added_value_y, enx_qnt);
-	ili9488_draw_string(2, 100 + added_value_y, rpm);
-	ili9488_draw_string(2, 130 + added_value_y, cent_tempo);
-	ili9488_draw_string(2, 160 + added_value_y, heavy_on);
-	ili9488_draw_string(2, 190 + added_value_y, bubbles);
+	
+	sprintf(buffer, selected_mode->nome);
+	ili9488_draw_string(100 + added_value_x, 10 + added_value_y, buffer);
+	
+	sprintf(buffer, "Tempo de enxague: %d", selected_mode->enxagueTempo);
+	ili9488_draw_string(2, 40 + added_value_y, buffer);
+	
+	sprintf(buffer, "Quantidade: %d", selected_mode->enxagueQnt);
+	ili9488_draw_string(2, 70 + added_value_y, buffer);
+	
+	sprintf(buffer, "RPM: %d", selected_mode->centrifugacaoRPM);
+	ili9488_draw_string(2, 100 + added_value_y, buffer);
+	
+	sprintf(buffer, "Tempo de centrifug: %d", selected_mode->centrifugacaoTempo);
+	ili9488_draw_string(2, 130 + added_value_y, buffer);
+	
+	if(selected_mode->heavy == 0){
+		sprintf(buffer, "Modo pesado: off");
+	}
+	if(selected_mode->heavy == 1){
+		sprintf(buffer, "Modo pesado: on");
+	}
+	ili9488_draw_string(2, 160 + added_value_y, buffer);
+	
+	if(selected_mode->bubblesOn == 0){
+		sprintf(buffer, "Modo bolhas: off");
+	}
+	if(selected_mode->bubblesOn == 1){
+		sprintf(buffer, "Modo bolhas: on");
+	}	
+	ili9488_draw_string(2, 190 + added_value_y, buffer);
 }
 
 static void select_screen(){
@@ -308,6 +307,7 @@ static void select_screen(){
 			break;
 		default:
 			break;
+	}
 
 	ili9488_draw_pixmap(250, 60, right_arrow.width, right_arrow.height, right_arrow.data);
 	ili9488_draw_pixmap(5, 60, left_arrow.width, left_arrow.height, left_arrow.data);
