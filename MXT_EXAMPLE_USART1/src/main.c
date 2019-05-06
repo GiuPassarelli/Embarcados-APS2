@@ -73,7 +73,6 @@ int page_number = 0;
 int customize_open = 0;
 volatile int lock_screen = 0;
 volatile int security_block = 0;
-volatile int value_selected = 0;
 volatile int selection_addition = 0;
 volatile int running = 0;
 volatile int freeze_mode = 0;
@@ -464,6 +463,7 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 }
 
 void update_screen(uint32_t tx, uint32_t ty) {
+	int value_selected = 0;
 	if(ty >= 60 && ty <= 120 && !customize_open) {
 		if(tx >= 5 && tx <= 65) {
 			if (!running){
