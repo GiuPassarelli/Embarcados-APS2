@@ -69,8 +69,8 @@ typedef struct {
 #include "icons/end.h"
 #include "icons/snowflake.h"
 
-volatile int page_number = 0;
-volatile int customize_open = 0;
+int page_number = 0;
+int customize_open = 0;
 volatile int lock_screen = 0;
 volatile int security_block = 0;
 volatile int value_selected = 0;
