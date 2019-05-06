@@ -41,14 +41,6 @@
 #define BUT_IDX  11
 #define BUT_IDX_MASK (1 << BUT_IDX)
 
-volatile int page_number = 0;
-volatile int customize_open = 0;
-volatile int lock_screen = 0;
-volatile int security_block = 0;
-volatile int value_selected = 0;
-volatile int selection_addition = 0;
-volatile int running = 0;
-
 void RTC_init(void);
 
 struct ili9488_opt_t g_ili9488_display_opt;
@@ -75,6 +67,16 @@ typedef struct {
 #include "icons/circle-outline.h"
 #include "icons/stop.h"
 #include "icons/end.h"
+#include "icons/snowflake.h"
+
+volatile int page_number = 0;
+volatile int customize_open = 0;
+volatile int lock_screen = 0;
+volatile int security_block = 0;
+volatile int value_selected = 0;
+volatile int selection_addition = 0;
+volatile int running = 0;
+volatile int freeze_mode = 0;
 
 /**
  * Inicializa ordem do menu
@@ -113,9 +115,6 @@ static void configure_lcd(void){
 
 	/* Initialize LCD */
 	ili9488_init(&g_ili9488_display_opt);	
-	
-	//ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
-	//ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
 }
 
 /**
@@ -234,41 +233,40 @@ void RTC_init(){
 }
 
 static void draw_struct(t_ciclo *selected_mode, int added_value_x, int added_value_y){
-	uint8_t cicle_name[256];
-	uint8_t enx_tempo[256];
-	uint8_t enx_qnt[256];
-	uint8_t rpm[256];
-	uint8_t cent_tempo[256];
-	uint8_t heavy_on[256];
-	uint8_t bubbles[256];
-	
-	sprintf(cicle_name, selected_mode->nome);
-	sprintf(enx_tempo, "Tempo de enxague: %d", selected_mode->enxagueTempo);
-	sprintf(enx_qnt, "Quantidade: %d", selected_mode->enxagueQnt);
-	sprintf(rpm, "RPM: %d", selected_mode->centrifugacaoRPM);
-	sprintf(cent_tempo, "Tempo de centrifug: %d", selected_mode->centrifugacaoTempo);
-	
-	if(selected_mode->heavy == 0){
-		sprintf(heavy_on, "Modo pesado: off");
-	}
-	if(selected_mode->heavy == 1){
-		sprintf(heavy_on, "Modo pesado: on");
-	}
-	if(selected_mode->bubblesOn == 0){
-		sprintf(bubbles, "Modo bolhas: off");
-	}
-	if(selected_mode->bubblesOn == 1){
-		sprintf(bubbles, "Modo bolhas: on");
-	}
+	uint8_t buffer[128];
 	
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-	ili9488_draw_string(100 + added_value_x, 10 + added_value_y, cicle_name);
-	ili9488_draw_string(2, 40 + added_value_y, enx_tempo);
-	ili9488_draw_string(2, 70 + added_value_y, enx_qnt);
-	ili9488_draw_string(2, 100 + added_value_y, rpm);
-	ili9488_draw_string(2, 130 + added_value_y, cent_tempo);
-	ili9488_draw_string(2, 160 + added_value_y, heavy_on);
-	ili9488_draw_string(2, 190 + added_value_y, bubbles);
+	
+	sprintf(buffer, selected_mode->nome);
+	ili9488_draw_string(100 + added_value_x, 10 + added_value_y, buffer);
+	
+	sprintf(buffer, "Tempo de enxague: %d", selected_mode->enxagueTempo);
+	ili9488_draw_string(2, 40 + added_value_y, buffer);
+	
+	sprintf(buffer, "Quantidade: %d", selected_mode->enxagueQnt);
+	ili9488_draw_string(2, 70 + added_value_y, buffer);
+	
+	sprintf(buffer, "RPM: %d", selected_mode->centrifugacaoRPM);
+	ili9488_draw_string(2, 100 + added_value_y, buffer);
+	
+	sprintf(buffer, "Tempo de centrifug: %d", selected_mode->centrifugacaoTempo);
+	ili9488_draw_string(2, 130 + added_value_y, buffer);
+	
+	if(selected_mode->heavy == 0){
+		sprintf(buffer, "Modo pesado: off");
+	}
+	if(selected_mode->heavy == 1){
+		sprintf(buffer, "Modo pesado: on");
+	}
+	ili9488_draw_string(2, 160 + added_value_y, buffer);
+	
+	if(selected_mode->bubblesOn == 0){
+		sprintf(buffer, "Modo bolhas: off");
+	}
+	if(selected_mode->bubblesOn == 1){
+		sprintf(buffer, "Modo bolhas: on");
+	}	
+	ili9488_draw_string(2, 190 + added_value_y, buffer);
 }
 
 static void select_screen(){
@@ -278,31 +276,34 @@ static void select_screen(){
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
 	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
 	
-	if(page_number == 0){
-		ili9488_draw_pixmap(115, 60, daily.width, daily.height, daily.data);
-		selected_mode = p_primeiro;
-	}
-	if(page_number == 1){
-		ili9488_draw_pixmap(115, 60, heavy.width, heavy.height, heavy.data);
-		selected_mode = p_primeiro->next;
-	}
-	if(page_number == 2){
-		ili9488_draw_pixmap(115, 60, rinse.width, rinse.height, rinse.data);
-		selected_mode = p_primeiro->next->next;
-	}
-	if(page_number == 3){
-		ili9488_draw_pixmap(115, 60, centrifuge.width, centrifuge.height, centrifuge.data);
-		selected_mode = p_primeiro->next->next->next;
-	}
-	if(page_number == 4){
-		ili9488_draw_pixmap(115, 60, fast.width, fast.height, fast.data);
-		selected_mode = p_primeiro->previous->previous;
-	}
-
-	if(page_number == 5){
-		ili9488_draw_pixmap(115, 60, custom.width, custom.height, custom.data);
-		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-		ili9488_draw_string(100, 170, "Customizado");
+	switch (page_number){
+		case 0:
+			ili9488_draw_pixmap(115, 60, daily.width, daily.height, daily.data);
+			selected_mode = p_primeiro;
+			break;
+		case 1:
+			ili9488_draw_pixmap(115, 60, heavy.width, heavy.height, heavy.data);
+			selected_mode = p_primeiro->next;
+			break;
+		case 2:
+			ili9488_draw_pixmap(115, 60, rinse.width, rinse.height, rinse.data);
+			selected_mode = p_primeiro->next->next;
+			break;
+		case 3:
+			ili9488_draw_pixmap(115, 60, centrifuge.width, centrifuge.height, centrifuge.data);
+			selected_mode = p_primeiro->next->next->next;
+			break;
+		case 4:
+			ili9488_draw_pixmap(115, 60, fast.width, fast.height, fast.data);
+			selected_mode = p_primeiro->previous->previous;
+			break;
+		case 5:
+			ili9488_draw_pixmap(115, 60, custom.width, custom.height, custom.data);
+			ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+			ili9488_draw_string(100, 170, "Customizado");
+			break;
+		default:
+			break;
 	}
 
 	ili9488_draw_pixmap(250, 60, right_arrow.width, right_arrow.height, right_arrow.data);
@@ -358,6 +359,7 @@ static void run_module(){
 		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 		ili9488_draw_string(50, 240, "Lavagem em progresso");
 		ili9488_draw_pixmap(230, 60, end.width, end.height, end.data);
+		ili9488_draw_pixmap(5, 60, snowflake.width, snowflake.height, snowflake.data);
 		
 		hour = 0;
 		minute = 0;
@@ -464,13 +466,19 @@ uint32_t convert_axis_system_y(uint32_t touch_x) {
 void update_screen(uint32_t tx, uint32_t ty) {
 	if(ty >= 60 && ty <= 120 && !customize_open) {
 		if(tx >= 5 && tx <= 65) {
-			page_number -= 1;
-			if (page_number < 0) {
-				page_number += 6;
+			if (!running){
+				page_number -= 1;
+				if (page_number < 0) {
+					page_number += 6;
+				}
+				select_screen();
 			}
-			select_screen();
+			if (running){
+				freeze_mode = 1;
+			}
+			
 		} 
-		else if(tx >= 250 && tx <= 310) {
+		else if(tx >= 250 && tx <= 310 && !freeze_mode) {
 			page_number += 1;
 			if (page_number >= 6) {
 				page_number -= 6;
@@ -485,7 +493,6 @@ void update_screen(uint32_t tx, uint32_t ty) {
 		}
 		else{
 			run_module();
-			customize_open = 0;
 		}
 	}
 	if(customize_open){
@@ -667,16 +674,13 @@ int main(void)
 	
 	io_init();
 	
-	t_ciclo *p_primeiro = initMenuOrder();
 	t_ciclo *selected_mode;
 	
 	uint32_t minute;
 	uint32_t second;
 	uint32_t hour;
 	
-	char bufferHour[32];
-	char bufferMinute[32];
-	char bufferSecond[32];
+	char bufferTime[32];
 	
 	int lastSecond = 0;
 	
@@ -691,23 +695,9 @@ int main(void)
 			mxt_debounce(&device);
 		}
 		if(running){
-			if(page_number == 0){
-				selected_mode = p_primeiro;
-			}
-			if(page_number == 1){
-				selected_mode = p_primeiro->next;
-			}
-			if(page_number == 2){
-				selected_mode = p_primeiro->next->next;
-			}
-			if(page_number == 3){
-				selected_mode = p_primeiro->next->next->next;
-			}
-			if(page_number == 4){
-				selected_mode = p_primeiro->previous->previous;
-			}
-			if(page_number == 5){
-				selected_mode = p_primeiro->previous;
+			selected_mode = &c_diario;
+			for(int i = 0; i < page_number; i++) {
+				selected_mode = selected_mode->next;
 			}
 			
 			rtc_get_time(RTC, &hour, &minute, &second);
@@ -715,17 +705,14 @@ int main(void)
 			int minutesToFinish = (selected_mode->enxagueTempo * selected_mode->enxagueQnt) + selected_mode->centrifugacaoTempo;
 			
 			if(minute != minutesToFinish){
-				sprintf(bufferMinute, "%d", minute);
-				sprintf(bufferSecond, "%d", second);
+				sprintf(bufferTime, "%02d:%02d", minute, second);
 				
 				if(lastSecond != second){
 					ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
 					ili9488_draw_filled_rectangle(100, 300, 300, 350);
 					ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 					
-					ili9488_draw_string(100, 300, bufferMinute);
-					ili9488_draw_string(125, 300, ":");
-					ili9488_draw_string(150, 300, bufferSecond);
+					ili9488_draw_string(100, 300, bufferTime);
 					lastSecond = second;
 				}
 				
@@ -737,6 +724,7 @@ int main(void)
 				ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 				ili9488_draw_string(50, 240, "Lavagem concluida!");
 				running = 0;
+				freeze_mode = 0;
 				delay_s(2);
 				select_screen();
 				lastSecond = 0;
