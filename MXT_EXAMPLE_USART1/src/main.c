@@ -71,7 +71,6 @@ typedef struct {
 
 int page_number = 0;
 int customize_open = 0;
-volatile int lock_screen = 0;
 volatile int security_block = 0;
 volatile int selection_addition = 0;
 volatile int running = 0;
