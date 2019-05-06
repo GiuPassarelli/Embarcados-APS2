@@ -41,15 +41,6 @@
 #define BUT_IDX  11
 #define BUT_IDX_MASK (1 << BUT_IDX)
 
-volatile int page_number = 0;
-volatile int customize_open = 0;
-volatile int lock_screen = 0;
-volatile int security_block = 0;
-volatile int value_selected = 0;
-volatile int selection_addition = 0;
-volatile int running = 0;
-volatile int freeze_mode = 0;
-
 void RTC_init(void);
 
 struct ili9488_opt_t g_ili9488_display_opt;
@@ -77,6 +68,15 @@ typedef struct {
 #include "icons/stop.h"
 #include "icons/end.h"
 #include "icons/snowflake.h"
+
+volatile int page_number = 0;
+volatile int customize_open = 0;
+volatile int lock_screen = 0;
+volatile int security_block = 0;
+volatile int value_selected = 0;
+volatile int selection_addition = 0;
+volatile int running = 0;
+volatile int freeze_mode = 0;
 
 /**
  * Inicializa ordem do menu
