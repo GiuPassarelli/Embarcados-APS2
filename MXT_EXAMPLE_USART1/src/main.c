@@ -682,9 +682,7 @@ int main(void)
 	uint32_t second;
 	uint32_t hour;
 	
-	char bufferHour[32];
-	char bufferMinute[32];
-	char bufferSecond[32];
+	char bufferTime[32];
 	
 	int lastSecond = 0;
 	
@@ -723,17 +721,14 @@ int main(void)
 			int minutesToFinish = (selected_mode->enxagueTempo * selected_mode->enxagueQnt) + selected_mode->centrifugacaoTempo;
 			
 			if(minute != minutesToFinish){
-				sprintf(bufferMinute, "%d", minute);
-				sprintf(bufferSecond, "%d", second);
+				sprintf(bufferTime, "%02d:%02d", minute, second);
 				
 				if(lastSecond != second){
 					ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
 					ili9488_draw_filled_rectangle(100, 300, 300, 350);
 					ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
 					
-					ili9488_draw_string(100, 300, bufferMinute);
-					ili9488_draw_string(125, 300, ":");
-					ili9488_draw_string(150, 300, bufferSecond);
+					ili9488_draw_string(100, 300, bufferTime);
 					lastSecond = second;
 				}
 				
