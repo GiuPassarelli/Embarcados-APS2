@@ -280,32 +280,34 @@ static void select_screen(){
 	ili9488_set_foreground_color(COLOR_CONVERT(COLOR_LIGHTBLUE));
 	ili9488_draw_filled_rectangle(0, 0, ILI9488_LCD_WIDTH-1, ILI9488_LCD_HEIGHT-1);
 	
-	if(page_number == 0){
-		ili9488_draw_pixmap(115, 60, daily.width, daily.height, daily.data);
-		selected_mode = p_primeiro;
-	}
-	if(page_number == 1){
-		ili9488_draw_pixmap(115, 60, heavy.width, heavy.height, heavy.data);
-		selected_mode = p_primeiro->next;
-	}
-	if(page_number == 2){
-		ili9488_draw_pixmap(115, 60, rinse.width, rinse.height, rinse.data);
-		selected_mode = p_primeiro->next->next;
-	}
-	if(page_number == 3){
-		ili9488_draw_pixmap(115, 60, centrifuge.width, centrifuge.height, centrifuge.data);
-		selected_mode = p_primeiro->next->next->next;
-	}
-	if(page_number == 4){
-		ili9488_draw_pixmap(115, 60, fast.width, fast.height, fast.data);
-		selected_mode = p_primeiro->previous->previous;
-	}
-
-	if(page_number == 5){
-		ili9488_draw_pixmap(115, 60, custom.width, custom.height, custom.data);
-		ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
-		ili9488_draw_string(100, 170, "Customizado");
-	}
+	switch (page_number){
+		case 0:
+			ili9488_draw_pixmap(115, 60, daily.width, daily.height, daily.data);
+			selected_mode = p_primeiro;
+			break;
+		case 1:
+			ili9488_draw_pixmap(115, 60, heavy.width, heavy.height, heavy.data);
+			selected_mode = p_primeiro->next;
+			break;
+		case 2:
+			ili9488_draw_pixmap(115, 60, rinse.width, rinse.height, rinse.data);
+			selected_mode = p_primeiro->next->next;
+			break;
+		case 3:
+			ili9488_draw_pixmap(115, 60, centrifuge.width, centrifuge.height, centrifuge.data);
+			selected_mode = p_primeiro->next->next->next;
+			break;
+		case 4:
+			ili9488_draw_pixmap(115, 60, fast.width, fast.height, fast.data);
+			selected_mode = p_primeiro->previous->previous;
+			break;
+		case 5:
+			ili9488_draw_pixmap(115, 60, custom.width, custom.height, custom.data);
+			ili9488_set_foreground_color(COLOR_CONVERT(COLOR_BLACK));
+			ili9488_draw_string(100, 170, "Customizado");
+			break;
+		default:
+			break;
 
 	ili9488_draw_pixmap(250, 60, right_arrow.width, right_arrow.height, right_arrow.data);
 	ili9488_draw_pixmap(5, 60, left_arrow.width, left_arrow.height, left_arrow.data);
